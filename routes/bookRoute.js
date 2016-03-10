@@ -1,12 +1,9 @@
 var express = require('express');
-//var bodyParser = require ('body-parser');
-
 app = express();
-//var jsonParser = bodyParser.json();
 
 routes = function(Book) {
     var bookRouter = express.Router();
-    bookRouter.route('/books')
+    bookRouter.route('/')
         .get(function (request, response) {
             var query = {};
             switch (Object.keys(request.query)[0]) {
@@ -42,41 +39,66 @@ routes = function(Book) {
             var book = new Book(request.body);
             if (!request.body)
                 return response.sendStatus(400);
-            book.save();
+            book.save(function(err){
+                if (err)
+                    response.status(500).send(err);
+                else
+                    response.json(request.book);
+            });
             response.status(201).send(book);
         });
 
-
-    bookRouter.route('/books/:bookid')
+    bookRouter.use('/:bookid', function (request, response, next){
+        var bookId = request.params.bookid;
+        if (bookId) {
+            Book.findById(bookId, function (err, book) {
+                if (err)
+                    response.status(500).send(err);
+                else if (book) {
+                    request.book = book;
+                    next();
+                }
+                else
+                    response.status(404).send('no book found');
+            });
+        }
+    });
+    bookRouter.route('/:bookid')
         .get(function (request, response) {
-            var bookId = request.params.bookid;
-            if (bookId) {
-                Book.findById(bookId, function (err, book) {
-                    if (err)
-                        response.status(404).send(err);
-                    else
-                        response.json(book);
-                });
-            }
+            response.json(request.book);
         })
         .put(function (request, response){
-            var bookId = request.params.bookid;
-            if (!bookId)
-                response.status(500).send('missing BookId');
-            else {
-                Book.findById(bookId, function (err, book) {
-                    if (err)
-                        response.status(404).send('cannot find book id ' + bookId);
-                    else {
-                        book.title = request.body.title;
-                        book.author = request.body.author;
-                        book.genre = request.body.genre;
-                        book.read = request.body.read;
-                        book.save();
-                        response.json(book);
-                    }
-                });
+            request.book.title = request.body.title;
+            request.book.author = request.body.author;
+            request.book.genre = request.body.genre;
+            request.book.read = request.body.read;
+            request.book.save(function(err){
+            if (err)
+                response.status(500).send(err);
+            else
+                response.json(request.book);
+            });
+        })
+        .patch(function(request, response){
+            if (request.book._id)
+                delete request.book._id;
+            for (var item in request.body){
+                request.book[item] = request.body[item];
             }
+            request.book.save(function(err){
+                if (err)
+                    response.status(500).send(err);
+                else
+                    response.json(request.book);
+            });
+        })
+        .delete(function(request, response){
+            request.book.remove(function(err){
+                if (err)
+                    response.status(500).send(err);
+                else
+                    response.status(204).send('removed');
+            });
         });
     return bookRouter;
 };

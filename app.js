@@ -6,7 +6,7 @@ app.use(bodyParser.json());
 var db = require('./db/dbConnect');
 var book = require('./models/bookModel');
 var booksRoute = require('./routes/bookRoute')(book);
-app.use('/api',booksRoute);
+app.use('/api/books',booksRoute);
 // set up the prot
 var port = process.env.PORT || 3000;
 
