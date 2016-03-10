@@ -1,8 +1,8 @@
 var express = require('express');
-var bodyParser = require ('body-parser');
+//var bodyParser = require ('body-parser');
 
 app = express();
-var jsonParser = bodyParser.json();
+//var jsonParser = bodyParser.json();
 
 routes = function(Book) {
     var bookRouter = express.Router();
@@ -38,7 +38,7 @@ routes = function(Book) {
                     response.json(books);
             });
         })
-        .post(jsonParser, function (request, response) {
+        .post(function (request, response) {
             var book = new Book(request.body);
             if (!request.body)
                 return response.sendStatus(400);
@@ -46,15 +46,35 @@ routes = function(Book) {
             response.status(201).send(book);
         });
 
+
     bookRouter.route('/books/:bookid')
         .get(function (request, response) {
             var bookId = request.params.bookid;
             if (bookId) {
                 Book.findById(bookId, function (err, book) {
                     if (err)
-                        response.sendStatus(404);
+                        response.status(404).send(err);
                     else
                         response.json(book);
+                });
+            }
+        })
+        .put(function (request, response){
+            var bookId = request.params.bookid;
+            if (!bookId)
+                response.status(500).send('missing BookId');
+            else {
+                Book.findById(bookId, function (err, book) {
+                    if (err)
+                        response.status(404).send('cannot find book id ' + bookId);
+                    else {
+                        book.title = request.body.title;
+                        book.author = request.body.author;
+                        book.genre = request.body.genre;
+                        book.read = request.body.read;
+                        book.save();
+                        response.json(book);
+                    }
                 });
             }
         });
