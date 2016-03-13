@@ -1,11 +1,12 @@
-var express = require('express');
-var app = express();
-var bodyParser = require ('body-parser');
+var express = require('express'),
+    app = express(),
+    bodyParser = require ('body-parser');
 app.use(bodyParser.json());
 
-var db = require('./db/dbConnect');
-var book = require('./models/bookModel');
-var booksRoute = require('./routes/bookRoute')(book);
+var db = require('./db/dbConnect'),
+    book = require('./models/bookModel'),
+    booksRoute = require('./routes/bookRoute')(book);
+
 app.use('/api/books',booksRoute);
 // set up the prot
 var port = process.env.PORT || 3000;

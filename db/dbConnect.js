@@ -1,2 +1,6 @@
 var mongoose = require('mongoose');
-module.exports = mongoose.connect('mongodb://localhost/bookAPI');
+if (process.env.ENV == 'Test')
+    connectionStr = 'mongodb://localhost/bookAPI_Test';
+else
+    connectionStr = 'mongodb://localhost/bookAPI';
+module.exports = mongoose.connect(connectionStr);
